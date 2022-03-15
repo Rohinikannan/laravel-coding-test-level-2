@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Project;
+use App\Models\Task;
+
 use Validator;
 use Hash;
 use Auth;
@@ -131,4 +134,63 @@ class ApiController extends Controller
         $token=$user->createToken('token')->plainTextToken;
         return response(['jwt'=>$token]);
     }
+
+    public function createProject(Request $request) {
+      $validator = Validator::make($request->all(), [
+          'name' => 'required|unique:project',
+    
+      ]);
+
+      if($validator->fails()){
+          return response(['error' => $validator->errors()]);
+      }
+      $this->authorize('access-project');
+      $project = Project::create([
+          'name' => $request->name
+      ]);
+  
+    return response()->json([
+        "project"=>$project,
+      "message" => "Project record created"
+    ], 201);
+  }
+
+  public function createTask(Request $request) {
+    $validator = Validator::make($request->all(), [
+        'title' => 'required',
+        'description'=>'required',
+        //'status' =>'required'
+  
+    ]);
+
+    if($validator->fails()){
+        return response(['error' => $validator->errors()]);
+    }
+    $this->authorize('access-task');
+    $task = Task::create([
+        'title' => $request->title,
+        'description'=>$request->description,
+        'status'=> "NOT_STARTED",
+        'user_id'=>$request->user_id,
+        'project_id'=>$request->project_id
+    ]);
+
+  return response()->json([
+      "task"=>$task,
+    "message" => "Task created"
+  ], 201);
+}
+
+public function getAllProjects($name){
+
+  if (Project::where('name', $name)->exists()) {
+    $project = Project::where('name', $name)->orderBy('name','asc')->get()->toJson(JSON_PRETTY_PRINT);
+    return response($project, 200);
+  } else {
+    return response()->json([
+      "message" => "Resource not found"
+    ], 404);
+  }
+}
+
 }
