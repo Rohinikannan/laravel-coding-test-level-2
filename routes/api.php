@@ -21,11 +21,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users/{id}', 'App\Http\Controllers\ApiController@getResource');
     Route::post('create/project','App\Http\Controllers\ApiController@createProject');
     Route::post('create/task','App\Http\Controllers\ApiController@createTask');
+    Route::put('update/task/{id}','App\Http\Controllers\ApiController@updateTask');
+
+    
 });
 
-
-//Route::get('users', 'App\Http\Controllers\ApiController@getAllResource');
-//Route::get('users/{id}', 'App\Http\Controllers\ApiController@getResource');
 Route::post('users','App\Http\Controllers\ApiController@createResource');
 Route::post('users/login','App\Http\Controllers\ApiController@login');
 Route::put('users/{id}', 'App\Http\Controllers\ApiController@updateResource');
