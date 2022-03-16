@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Project;
 use App\Models\Task;
+use Illuminate\Support\Str;
+use Response;
 
 use Validator;
 use Hash;
@@ -34,7 +36,8 @@ class ApiController extends Controller
         $user = User::create([
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'role_id'=>$request->role_id
+            'role_id'=>$request->role_id,
+            'remember_token' => Str::random(10),
         ]);
     
       return response()->json([
@@ -166,7 +169,7 @@ class ApiController extends Controller
     if($validator->fails()){
         return response(['error' => $validator->errors()]);
     }
-    $this->authorize('access-task');
+    $this->authorize('access-project');
     $task = Task::create([
         'title' => $request->title,
         'description'=>$request->description,
@@ -191,6 +194,38 @@ public function getAllProjects($name){
       "message" => "Resource not found"
     ], 404);
   }
+}
+
+public function updateTask(Request $request, $id) {
+  $user = Auth::user();
+  $userId=$user->id;
+  if(Task::where('user_id',$userId)->where('project_id',$id)->exists()){
+    $task=Task::where('user_id',$userId)->where('project_id',$id)->get();
+       $validator = Validator::make($request->all(), [
+         'title' => 'required',
+         'description' => 'required',
+        'status'=>'required'
+     ]);
+
+     if($validator->fails()){
+         return response(['error' => $validator->errors()]);
+     }
+     $data=[
+       'title'=>$request->title,
+            'description'=>$request->description,
+            'status' =>$request->status
+    ];
+   Task::where('user_id',$userId)->where('project_id',$id)->update($data);
+     return response()->json([
+       "message" => "records updated successfully"
+     ], 200);
+    
+  }else{
+    return response()->json([
+           "message" => "Resource not found"
+         ], 404);
+  }
+
 }
 
 }
